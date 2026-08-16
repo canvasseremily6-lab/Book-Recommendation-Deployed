@@ -7,23 +7,22 @@ import boto3
 
 st.set_page_config(page_title='Model Monitoring Dashboard', layout = 'wide')
 
-st.cache_data(ttl = 30)
+@st.cache_data(ttl = 30)
 def load_logs(): 
     dynamodb = boto3.resource('dynamodb', region_name = 'us-east-1')
     table = dynamodb.Table('prediction_logs')
 
     items = []
     response = table.scan()
-    items.extend(response['Item'])
     while 'LastEvaluatedKey' in response: 
         response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        items.extend(response['Item'])
+        items.extend(response['Items'])
 
     df = pd.DataFrame(items)
     if not df.empty:
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df['latency_ms'] = pd.to_numeric(df['latency_ms'], errors = 'coerce')
-        df = df.sort_values('tiemstamp')
+        df = df.sort_values('timestamp')
 
     return df
 
@@ -44,9 +43,9 @@ st.subheader('Predicction Latency Over Time')
 latency_by_time = df.set_index('timestamp')['latency_ms']
 st.line_chart(latency_by_time)
 col1, col2, col3 = st.columns(3)
-col1.metric('Average Latency', f'{df['latency_ms'].mean():.1f} ms')
-col2.metric('Minimum Latency', f'{df['latency_ms'].min():.1f} ms')
-col3.metric('Maximum Latency', f'{df['latency_ms'].max():.1f} ms')
+col1.metric('Average Latency', f'{df["latency_ms"].mean():.1f} ms')
+col2.metric('Minimum Latency', f'{df["latency_ms"].min():.1f} ms')
+col3.metric('Maximum Latency', f'{df["latency_ms"].max():.1f} ms')
 
 st.divider()
 
@@ -55,7 +54,7 @@ st.subheader('Distribution of Prediction Genres')
 genre_counts = df['genre'].value_counts()
 st.bar_chart(genre_counts)
 
-df['date'] = df['timestamps'].dt.date
+df['date'] = df['timestamp'].dt.date
 drift_pivot = df.groupby(['date', 'genre']).size().unstack(fill_value=0)
 st.line_chart(drift_pivot)
 
@@ -86,7 +85,7 @@ st.subheader('Recent Requsts')
 display_cols = ['timestamp', 'title', 'genre', 'latency_ms', 'cached']
 if 'feedback' in df.columns:
     display_cols.append('feedback')
-st.dataframe(df[display_cols].sort_values('timestamp', ascending=False).haed(50), use_container_width=True)
+st.dataframe(df[display_cols].sort_values('timestamp', ascending=False).head(50), use_container_width=True)
 
 if st.button('Refresh Data'):
     st.cache_data.clear()
