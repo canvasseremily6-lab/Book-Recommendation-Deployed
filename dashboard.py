@@ -36,6 +36,9 @@ except Exception as e:
 
 if df.empty:
     st.warning('No prediction logs found')
+    if st.button('Refresh Data'):
+        st.cache_data.clear()
+        st.rerun()
     st.stop()
 
 # prediction latency over time 
