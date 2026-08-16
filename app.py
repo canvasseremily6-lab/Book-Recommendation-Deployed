@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import os
 
-API = os.environ.get('API','http://127.0.0.1:8000')
+API = os.environ.get('API_URL','http://127.0.0.1:8000')
 
 st.title('Book Recommendations System')
 st.markdown('Tell me your favorite book and I will give you two recommendations!')
