@@ -9,11 +9,8 @@ import os
 
 API = os.environ.get('API','http://127.0.0.1:8000')
 
-@st.cache_data
-def load_data():
-    return pd.read_csv('filtered_books.csv')
-
-filtered = load_data()
+st.title('Book Recommendations System')
+st.markdown('Tell me your favorite book and I will give you two recommendations!')
 
 genres = ['Other', 'Fiction', 'Children', 'Religion & Spirituality', 'Biography', 'History', 'Business', 'Self-Help', 'Mystery & Thriller', 'Sci-Fi & Fantasy']
 
@@ -27,9 +24,6 @@ def load_model():
     return model 
 
 loaded_model = load_model()
-
-st.title('Book Recommendations System')
-st.markdown('Tell me your favorite book and I will give you two recommendations!')
 
 book_input = st.text_area(label = 'Favorite book', placeholder = 'What is the title of your favorite book?')
 author_input = st.text_area(label = 'Author', placeholder = 'Who is the author?')
