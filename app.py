@@ -1,10 +1,5 @@
 import streamlit as st
 import requests
-import matplotlib.pyplot as plt
-import joblib 
-import pandas as pd
-from random import sample
-import wandb
 import os
 
 API = os.environ.get('API','http://127.0.0.1:8000')
@@ -13,17 +8,6 @@ st.title('Book Recommendations System')
 st.markdown('Tell me your favorite book and I will give you two recommendations!')
 
 genres = ['Other', 'Fiction', 'Children', 'Religion & Spirituality', 'Biography', 'History', 'Business', 'Self-Help', 'Mystery & Thriller', 'Sci-Fi & Fantasy']
-
-@st.cache_data(ttl = 30)
-def load_model():
-    '''Lodas current production model from W&B model registry'''
-    api = wandb.Api()
-    artifact = api.artifact('wandb-registry-model/book-genre-classifier:production')
-    artifact_dir = artifact.download()
-    model = joblib.load(f'{artifact_dir}/review_model.pkl')
-    return model 
-
-loaded_model = load_model()
 
 book_input = st.text_area(label = 'Favorite book', placeholder = 'What is the title of your favorite book?')
 author_input = st.text_area(label = 'Author', placeholder = 'Who is the author?')
@@ -35,7 +19,7 @@ if st.button(label = 'Analyze'):
         try: 
             response = requests.post(
                 f'{API}/predict',
-                json = {'title': book_input.strip(), 'auhtor': author_input.strip() or None}
+                json = {'title': book_input.strip(), 'author': author_input.strip() or None}
             )
             if response.status_code == 200:
                 st.session_state['result'] = response.json()
@@ -46,7 +30,7 @@ if st.button(label = 'Analyze'):
         except requests.exceptions.ConnectionError:
             st.session_state['error'] = 'Could not connect to the API. Is it running?'
             st.session_state.pop('result',None)
-        #st.session_state['prediction'] = loaded_model.predict([book_input])
+
 
 if 'error' in st.session_state:
     st.error(st.session_state['error'])
@@ -56,8 +40,8 @@ if 'result' in st.session_state:
     st.write(f"Genre: {result['genre']}")
     st.success(
         f'Here are recommedndations based on your favorite book:  \n'
-        f'Recommendation One: "{result['rec_1']}"  \n'
-        f'Recommendation Two: "{result['rec_2']}'
+        f'Recommendation One: "{result["rec_1"]}"  \n'
+        f'Recommendation Two: "{result["rec_2"]}"'
     )
 
     st.markdown('**Was this a good recommendation?**')
@@ -72,7 +56,7 @@ if 'result' in st.session_state:
     with col2:
         if st.button('No'):
             requests.post(f'{API}/feedback', json= {
-                'request_id': result['result_id'],
+                'request_id': result['request_id'],
                 'is_good_recommendation': False
             })
             st.toast('Thank you for the feedback')
