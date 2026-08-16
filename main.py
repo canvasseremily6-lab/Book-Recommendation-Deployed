@@ -133,8 +133,8 @@ async def predict_recommendation(request: RecommendationRequest):
         cached_item = None
 
     if cached_item:
+        latency_ms = (time.time() - start_time) * 1000       
         log_prediction(app,title,cached_item['genre'], cached_item['rec_1'], cached_item['rec_2'], cached = True, latency_ms=latency_ms)
-        latency_ms = (time.time() - start_time) * 1000
         return RecommendationResponse(
             genre=cached_item['genre'],
             rec_1=cached_item['rec_1'],
