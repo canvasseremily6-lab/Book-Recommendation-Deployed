@@ -25,8 +25,12 @@ if st.button(label = 'Analyze'):
                 st.session_state['result'] = response.json()
                 st.session_state.pop('error',None)
             else:
-                st.session_state['error'] = response.json().get('detail', 'Something went wrong')
-                st.session_state.pop('result',None)
+                try:
+                    detail = response.json().get('detail', 'Something went wrong')
+                except requests.exceptions.JSONDecodeError:
+                    detail = f'Server returned status {response.status_code}: {response.text[:200]}'
+                st.session_state['error'] = detail
+                st.session_state.pop('result', None)
         except requests.exceptions.ConnectionError:
             st.session_state['error'] = 'Could not connect to the API. Is it running?'
             st.session_state.pop('result',None)
