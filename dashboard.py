@@ -14,6 +14,7 @@ def load_logs():
 
     items = []
     response = table.scan()
+    items.extend(response['Items'])
     while 'LastEvaluatedKey' in response: 
         response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
         items.extend(response['Items'])
@@ -21,7 +22,11 @@ def load_logs():
     df = pd.DataFrame(items)
     if not df.empty:
         df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        if 'latency_ms' not in df.columns:
+            df['latency_ms'] = None
         df['latency_ms'] = pd.to_numeric(df['latency_ms'], errors = 'coerce')
+
         df = df.sort_values('timestamp')
 
     return df
