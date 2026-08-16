@@ -6,7 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
-COPY preprocessing.py .
+COPY test_preprocessing.py .
 COPY filtered_books.csv .
 
 EXPOSE 8000
