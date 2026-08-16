@@ -10,6 +10,7 @@ import joblib
 import ast
 import wandb
 import subprocess
+from test_preprocessing import clean_category, map_genres
 
 def get_git_commit():
     try: 
@@ -48,14 +49,6 @@ avg_ratings = avg_ratings[avg_ratings['num_of_ratings'] >= 10]
 merged_books = pd.merge(books, avg_ratings, on ='Title', how = 'inner')
 merged_books = merged_books.dropna(subset=['Title', 'categories'])
 
-def clean_category(x): 
-    '''Function to clean list-string formatting within dataset'''
-    try: 
-        parsed = ast.literal_eval(x)
-        return parsed[0] if isinstance(parsed,list) and parsed else x
-    except: 
-        return x
-
 merged_books['clean_categories'] = merged_books['categories'].apply(clean_category)
 merged_books['authors'] = merged_books['authors'].apply(clean_category)
 y = merged_books['clean_categories']
@@ -63,47 +56,6 @@ y = merged_books['clean_categories']
 counts = y.value_counts()
 valid_categories = counts[counts >= 20].index
 filtered = merged_books[merged_books['clean_categories'].isin(valid_categories)].copy()
-
-def map_genres(cat):
-    cat = str(cat).lower()
-    if 'fiction' in cat and 'juvenile' not in cat and 'science' not in cat: 
-        return 'Fiction'
-    elif 'science fiction' in cat or 'suspense' in cat: 
-        return 'Sci-Fi & Fantasy'
-    elif 'mystery' in cat or 'thriller' in cat or 'suspense' in cat: 
-        return 'Mystery & Thriller'
-    elif 'romance' in cat: 
-        return 'Romance'
-    elif 'juvenile' in cat or 'children' in cat: 
-        return 'Children'
-    elif 'biography' in cat or 'autobiography' in cat: 
-        return 'Biography'
-    elif 'history' in cat: 
-        return 'History'
-    elif 'business' in cat or 'economics' in cat: 
-        return 'Business'
-    elif 'self-help' in cat or 'self help' in cat: 
-        return 'Self-Help'
-    elif 'religion' in cat or 'spirituality' in cat: 
-        return 'Religion & Spirituality'
-    elif 'poetry' in cat:
-        return 'Poetry'
-    elif 'horror' in cat:
-        return 'Horror'
-    elif 'cooking' in cat or 'cookbook' in cat or 'food' in cat:
-        return 'Cooking'
-    elif 'health' in cat or 'fitness' in cat or 'medical' in cat:
-        return 'Health & Fitness'
-    elif 'travel' in cat:
-        return 'Travel'
-    elif 'humor' in cat or 'comic' in cat or 'graphic novel' in cat:
-        return 'Humor & Comics'
-    elif 'science' in cat and 'fiction' not in cat:
-        return 'Science & Nature'
-    elif 'fiction' in cat and 'juvenile' not in cat:
-        return 'Fiction'
-    else: 
-        return 'Other'
 
 filtered['genre'] = filtered['clean_categories'].apply(map_genres)
 filtered['text'] = filtered['Title'].fillna(' ') + ' ' + filtered['description'].fillna('')

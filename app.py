@@ -5,8 +5,9 @@ import joblib
 import pandas as pd
 from random import sample
 import wandb
+import os
 
-API = 'http://127.0.0.1:8000'
+API = os.environ.get('API','http://127.0.0.1:8000')
 
 @st.cache_data
 def load_data():
@@ -65,23 +66,21 @@ if 'result' in st.session_state:
         f'Recommendation Two: "{result['rec_2']}'
     )
 
-# if 'prediction' in st.session_state:
-#     pred = st.session_state['prediction'][0]
-
-#     if pred in genres: 
-#         genre_filtered = filtered[filtered['genre'] == pred]
-
-#         if author_input in genre_filtered['authors'].values:
-#             rec_1 = genre_filtered[genre_filtered['authors']==author_input].sample(1).iloc[0]
-#             rec_2 = genre_filtered.sample(1).iloc[0]
-#             st.write(f'Genre: {pred}')
-#             st.success(f'Here are recommendations based on your favorite book:  \nRecommendation One (Same Author): "{rec_1["Title"]}" by {rec_1["authors"]}.  \nRecommendation Two: "{rec_2["Title"]}" by {rec_2["authors"]}')
-#         else: 
-#             recs = genre_filtered.sample(2)
-#             st.write(f'Genre: {pred}')
-#             st.success(f'Here are recommendations based on your favorite book:  \nRecommendation One: "{recs.iloc[0]["Title"]}" by {recs.iloc[0]["authors"]}.  \nRecommendation Two: "{recs.iloc[1]["Title"]}" by {recs.iloc[1]["authors"]}')
-
-
-# print(filtered['genre'].value_counts())
+    st.markdown('**Was this a good recommendation?**')
+    col1, col2 = st.columns(2)
+    with col1: 
+        if st.button('Yes'):
+            requests.post(f'{API}/feedback', json={
+                'request_id': result['request_id'],
+                'is_good_recommendation': True
+            })
+            st.toast('Thank you for the feedback')
+    with col2:
+        if st.button('No'):
+            requests.post(f'{API}/feedback', json= {
+                'request_id': result['result_id'],
+                'is_good_recommendation': False
+            })
+            st.toast('Thank you for the feedback')
 
 
